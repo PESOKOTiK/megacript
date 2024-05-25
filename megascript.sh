@@ -29,6 +29,44 @@ create_swap_file() {
     fi
 }
 
+# Function to open ports with UFW for TCP and UDP
+open_ports() {
+    read -p "Enter TCP ports to open (separated by space): " -a tcp_ports
+    read -p "Enter UDP ports to open (separated by space): " -a udp_ports
+
+    # Open TCP ports
+    if [ ${#tcp_ports[@]} -ne 0 ]; then
+        echo "Opening TCP ports: ${tcp_ports[@]}"
+        for port in "${tcp_ports[@]}"; do
+            if [[ $port =~ ^[0-9]+$ ]]; then
+                sudo ufw allow $port/tcp
+            else
+                echo "Invalid port number: $port"
+            fi
+        done
+    else
+        echo "No TCP ports specified."
+    fi
+
+    # Open UDP ports
+    if [ ${#udp_ports[@]} -ne 0 ]; then
+        echo "Opening UDP ports: ${udp_ports[@]}"
+        for port in "${udp_ports[@]}"; do
+            if [[ $port =~ ^[0-9]+$ ]]; then
+                sudo ufw allow $port/udp
+            else
+                echo "Invalid port number: $port"
+            fi
+        done
+    else
+        echo "No UDP ports specified."
+    fi
+
+    # Enable UFW if not already enabled
+    sudo ufw enable
+}
+
+
 # Main script starts here
 echo "Please select an action:"
 
@@ -46,6 +84,14 @@ if [[ $swap_choice == "y" || $swap_choice == "Y" ]]; then
     create_swap_file
 else
     echo "Skipping swap file creation."
+fi
+
+# Action 3: Open ports with UFW
+read -p "3) Open ports with UFW (y/n)? " ufw_choice
+if [[ $ufw_choice == "y" || $ufw_choice == "Y" ]]; then
+    open_ports
+else
+    echo "Skipping opening ports with UFW."
 fi
 
 echo "Script completed."
